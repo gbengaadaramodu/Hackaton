@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SimuLearn.Api/SimuLearn.Api.csproj" />
+    <Project Path="src/SimuLearn.Application/SimuLearn.Application.csproj" />
+    <Project Path="src/SimuLearn.Domain/SimuLearn.Domain.csproj" />
+    <Project Path="src/SimuLearn.Infrastructure/SimuLearn.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SimuLearn.Tests/SimuLearn.Tests.csproj" />
+  </Folder>
+</Solution>

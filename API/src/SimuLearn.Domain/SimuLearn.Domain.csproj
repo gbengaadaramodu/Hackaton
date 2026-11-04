@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>SimuLearn.Domain</RootNamespace>
+    <AssemblyName>SimuLearn.Domain</AssemblyName>
+  </PropertyGroup>
+
+</Project>

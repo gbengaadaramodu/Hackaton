@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>SimuLearn.Tests</RootNamespace>
+    <AssemblyName>SimuLearn.Tests</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- xunit.v3 runs on Microsoft.Testing.Platform; this opts dotnet test into it on the .NET 10 SDK. -->
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimuLearn.Api\SimuLearn.Api.csproj" />
+    <ProjectReference Include="..\..\src\SimuLearn.Application\SimuLearn.Application.csproj" />
+    <ProjectReference Include="..\..\src\SimuLearn.Domain\SimuLearn.Domain.csproj" />
+    <ProjectReference Include="..\..\src\SimuLearn.Infrastructure\SimuLearn.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
