@@ -44,9 +44,22 @@ public static class SimulationEndpoints
                 Results.Ok(simulationsService.RenderScene(
                     request.ModelKey,
                     request.State,
-                    cancellationToken)))
+                    cancellationToken,
+                    request.Frame)))
             .RequireAuthorization(ApiPolicies.Authenticated)
             .WithSummary("Render a server-painted SVG scene for a validated state");
+
+        simulations.MapPost("/render-image", async (
+                RenderImageSceneRequest request,
+                SimulationService simulationsService,
+                CancellationToken cancellationToken) =>
+                Results.Ok(await simulationsService.RenderImageSceneAsync(
+                    request.ModelKey,
+                    request.State,
+                    cancellationToken)))
+            .RequireAuthorization(ApiPolicies.Authenticated)
+            .RequireRateLimiting("ai")
+            .WithSummary("Generate an image illustration, falling back to SVG when unavailable");
 
         var requests = app.MapGroup("/api/v1/simulation-requests")
             .WithTags("Simulation requests");

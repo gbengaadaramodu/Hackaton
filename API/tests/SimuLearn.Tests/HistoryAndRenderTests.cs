@@ -55,6 +55,20 @@ public sealed class HistoryAndRenderTests
     }
 
     [Fact]
+    public void Svg_renderer_frame_zero_differs_from_final_frame()
+    {
+        var state = _history.CreateInitialState();
+        var outcome = _history.Simulate(state);
+
+        var first = SvgSceneRenderer.Render(_history, state, outcome, 0);
+        var last = SvgSceneRenderer.Render(_history, state, outcome, outcome.Trajectory.Count - 1);
+
+        Assert.Contains("Focus year 1914", first);
+        Assert.Contains("Focus year 1950", last);
+        Assert.NotEqual(first, last);
+    }
+
+    [Fact]
     public void Svg_renderer_covers_every_model_without_leaking_markup()
     {
         AssertSvg(new InclinedPlaneModel());

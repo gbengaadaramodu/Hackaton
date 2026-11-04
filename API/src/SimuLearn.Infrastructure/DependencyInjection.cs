@@ -49,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, JwtTokenService>();
 
         services.AddHttpClient<IAiChatClient, OpenAiCompatibleChatClient>();
+        services.AddHttpClient<IAiImageClient, OpenAiCompatibleImageClient>();
 
         services.AddSingleton<ISimulationModel, InclinedPlaneModel>();
         services.AddSingleton<ISimulationModel, DcCircuitModel>();

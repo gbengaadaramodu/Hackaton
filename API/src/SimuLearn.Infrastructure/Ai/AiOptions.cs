@@ -24,6 +24,13 @@ public sealed class AiOptions
     /// </summary>
     public int TimeoutSeconds { get; set; } = 180;
 
+    /// <summary>Optional image generation. Off by default; SVG remains the primary renderer.</summary>
+    public bool ImageEnabled { get; set; }
+
+    public string ImageModel { get; set; } = string.Empty;
+
+    public string ImageEndpoint { get; set; } = "images/generations";
+
     public string EffectiveApiKey =>
         !string.IsNullOrWhiteSpace(ApiKey)
             ? ApiKey
@@ -39,4 +46,11 @@ public sealed class AiOptions
         && !string.IsNullOrWhiteSpace(BaseUrl)
         && !string.IsNullOrWhiteSpace(EffectiveApiKey)
         && !string.IsNullOrWhiteSpace(Model);
+
+    public bool IsImageConfigured =>
+        Enabled
+        && ImageEnabled
+        && !string.IsNullOrWhiteSpace(BaseUrl)
+        && !string.IsNullOrWhiteSpace(EffectiveApiKey)
+        && !string.IsNullOrWhiteSpace(ImageModel);
 }

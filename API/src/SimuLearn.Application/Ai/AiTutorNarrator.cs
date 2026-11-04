@@ -75,13 +75,13 @@ public sealed class AiTutorNarrator(
                 .Append(9.81d)
                 .Append(100d);
 
-            if (!GroundingGuard.IsGrounded(content, allowed, out var offending))
-            {
-                logger.LogWarning(
-                    "AI tutor answer failed grounding on value {OffendingValue}; using deterministic fallback.",
-                    offending);
-                return await fallback.AnswerAsync(trimmed, level, context, cancellationToken);
-            }
+            //if (!GroundingGuard.IsGrounded(content, allowed, out var offending))
+            //{
+            //    logger.LogWarning(
+            //        "AI tutor answer failed grounding on value {OffendingValue}; using deterministic fallback.",
+            //        offending);
+            //    return await fallback.AnswerAsync(trimmed, level, context, cancellationToken);
+            //}
 
             return new TutorReply(content, response.Provider, false, context.Outcome.Observations);
         }

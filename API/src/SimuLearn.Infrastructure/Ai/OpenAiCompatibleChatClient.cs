@@ -92,7 +92,7 @@ public sealed class OpenAiCompatibleChatClient : IAiChatClient, IDisposable
                 ["model"] = _options.Model,
                 ["input"] = input,
                 ["temperature"] = Math.Clamp(request.Temperature, 0d, 1.5d),
-                ["max_output_tokens"] = Math.Max(request.MaxOutputTokens * 2, 4096),
+                ["max_output_tokens"] = Math.Max(request.MaxOutputTokens * 2, 8000),
                 ["stream"] = false
             };
 

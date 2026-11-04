@@ -9,24 +9,45 @@ namespace SimuLearn.Domain.Simulations;
 /// </summary>
 public static class SvgSceneRenderer
 {
-    public static string Render(ISimulationModel model, ParameterSet state, SimulationOutcome outcome)
+    public static string Render(
+        ISimulationModel model,
+        ParameterSet state,
+        SimulationOutcome outcome,
+        int? frameIndex = null)
     {
         return model.ModelKey switch
         {
-            Models.InclinedPlaneModel.Key => RenderIncline(model, state, outcome),
+            Models.InclinedPlaneModel.Key => RenderIncline(model, state, outcome, frameIndex),
             Models.DcCircuitModel.Key => RenderCircuit(model, state, outcome),
-            Models.NigerianIndependenceModel.Key => RenderIndependence(model, state, outcome),
+            Models.NigerianIndependenceModel.Key => RenderIndependence(model, state, outcome, frameIndex),
             _ => RenderGeneric(model, outcome),
         };
     }
 
-    private static string RenderIncline(ISimulationModel model, ParameterSet state, SimulationOutcome outcome)
+    private static TrajectoryPoint FramePoint(SimulationOutcome outcome, int? frameIndex)
+    {
+        if (outcome.Trajectory.Count == 0)
+        {
+            return new TrajectoryPoint(0, 0, 0);
+        }
+
+        var index = frameIndex is { } requested
+            ? Math.Clamp(requested, 0, outcome.Trajectory.Count - 1)
+            : outcome.Trajectory.Count - 1;
+        return outcome.Trajectory[index];
+    }
+
+    private static string RenderIncline(
+        ISimulationModel model,
+        ParameterSet state,
+        SimulationOutcome outcome,
+        int? frameIndex)
     {
         var angle = state.TryGet("angleDegrees", out var a) ? a : 20;
         var length = state.TryGet("rampLengthM", out var l) ? Math.Max(l, 0.5) : 4;
         var accel = outcome.Find("acceleration")?.Value ?? 0;
-        var last = outcome.Trajectory.Count > 0 ? outcome.Trajectory[^1] : new TrajectoryPoint(0, 0, 0);
-        var progress = Math.Clamp(last.PositionMetres / length, 0, 1);
+        var point = FramePoint(outcome, frameIndex);
+        var progress = Math.Clamp(point.PositionMetres / length, 0, 1);
         var radians = angle * Math.PI / 180;
         var rampW = 380d;
         var rampH = rampW * Math.Tan(radians);
@@ -70,11 +91,20 @@ public static class SvgSceneRenderer
         return svg.ToString();
     }
 
-    private static string RenderIndependence(ISimulationModel model, ParameterSet state, SimulationOutcome outcome)
+    private static string RenderIndependence(
+        ISimulationModel model,
+        ParameterSet state,
+        SimulationOutcome outcome,
+        int? frameIndex)
     {
-        var year = state.TryGet("focusYear", out var y) ? y : 1950;
-        var readiness = outcome.Find("readinessIndex")?.Value ?? 0;
-        var momentum = outcome.Find("movementMomentum")?.Value ?? 0;
+        var finalReadiness = outcome.Find("readinessIndex")?.Value ?? 0;
+        var finalMomentum = outcome.Find("movementMomentum")?.Value ?? 0;
+        var point = FramePoint(outcome, frameIndex);
+        var hasFrame = outcome.Trajectory.Count > 0;
+        var year = hasFrame ? point.TimeSeconds : (state.TryGet("focusYear", out var y) ? y : 1950);
+        var readiness = hasFrame ? point.PositionMetres : finalReadiness;
+        var progress = finalReadiness > 0 ? readiness / finalReadiness : 0;
+        var momentum = finalMomentum * progress;
         var x = 90 + (year - 1914) / 46d * 460;
         var readW = readiness / 100 * 460;
         var momW = momentum / 100 * 460;

@@ -22,6 +22,7 @@ import {
   changeStatus,
 } from '../../api/sessions';
 import { getCatalog } from '../../api/catalog';
+import SvgScenePlayer from '../../components/sim/SvgScenePlayer';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -46,7 +47,7 @@ export default function SessionWorkspace() {
     refetchInterval: 15000,
   });
 
-  // Catalog carries each model's declared parameter bounds (min/max/step/unit)
+  // Catalog drives slider ranges (min/max/step/label/unit per model)
   const { data: catalog } = useQuery({
     queryKey: ['catalog'],
     queryFn: getCatalog,
@@ -163,8 +164,7 @@ export default function SessionWorkspace() {
               </Badge>
             </div>
             <p className="text-xs text-slate-500">
-              {modelInfo.domain || template?.domain || 'Simulation model'} • Objective:{' '}
-              {modelInfo.learningObjective || template?.learningObjective || 'Explore how this model behaves'}
+              {modelInfo.domain || 'Physics'} • Objective: {modelInfo.learningObjective || 'Scientific Modeling'}
             </p>
           </div>
         </div>
@@ -207,7 +207,8 @@ export default function SessionWorkspace() {
       {/* Main Split Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
         {/* Left / Center: Simulation Controls & Observations (7 cols) */}
-        <div className="lg:col-span-7 flex flex-col gap-4 overflow-y-auto pr-1">
+        <div className="lg:col-span-7 flex flex-col gap-4 overflow-y-auto pr-1 min-w-0">
+          <SvgScenePlayer modelKey={modelKey} state={session.state} />
           {/* Simulation Model State & Controls */}
           <Card className="p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -249,7 +250,7 @@ export default function SessionWorkspace() {
                           min={min}
                           max={max}
                           step={step}
-                          value={Number(val)}
+                          value={val}
                           onChange={(e) => handleParamChange(key, e.target.value)}
                           className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
                         />
@@ -262,11 +263,6 @@ export default function SessionWorkspace() {
                         >
                           Apply
                         </Button>
-                      </div>
-
-                      <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                        <span>{min}{unit}</span>
-                        <span>{max}{unit}</span>
                       </div>
                     </div>
                   );
@@ -302,7 +298,13 @@ export default function SessionWorkspace() {
                     className="p-2.5 bg-white border border-slate-100 rounded-xl text-xs text-slate-700 flex items-start gap-2"
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
-                    <span>{typeof obs === 'string' ? obs : JSON.stringify(obs)}</span>
+                    <span className="break-words min-w-0">
+                      {typeof obs === 'string'
+                        ? obs
+                        : obs.display
+                          ? `${obs.label}: ${obs.display}`
+                          : `${obs.label ?? obs.name}: ${obs.value} ${obs.unit ?? ''}`}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -311,7 +313,7 @@ export default function SessionWorkspace() {
         </div>
 
         {/* Right: AI Grounded Tutor Chat (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col h-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="lg:col-span-5 flex flex-col h-full min-h-0 min-w-0 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {/* Chat Header */}
           <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-primary-600 text-white flex items-center justify-center">
@@ -322,7 +324,7 @@ export default function SessionWorkspace() {
                 Grounded AI Tutor
               </h3>
               <p className="text-[10px] text-slate-400">
-                Answers grounded in this model's verified rules
+                Answers strictly verified by simulation physics
               </p>
             </div>
           </div>
@@ -357,7 +359,7 @@ export default function SessionWorkspace() {
                       {isAssistant ? <Bot className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                     </div>
                     <div
-                      className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${
+                      className={`max-w-[85%] min-w-0 break-words rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${
                         isAssistant
                           ? 'bg-slate-100 text-slate-800 rounded-tl-none'
                           : 'bg-primary-600 text-white rounded-tr-none'
@@ -382,15 +384,16 @@ export default function SessionWorkspace() {
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               placeholder="Ask the simulation tutor..."
-              className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="flex-1 min-w-0 px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <Button
               type="submit"
               size="sm"
               variant="primary"
+              aria-label="Send message"
               disabled={!chatInput.trim()}
               loading={sendMsgMutation.isPending}
-              className="p-2.5"
+              className="p-2.5 flex-shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
             </Button>
@@ -400,3 +403,5 @@ export default function SessionWorkspace() {
     </div>
   );
 }
+
+

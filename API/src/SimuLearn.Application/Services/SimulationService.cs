@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SimuLearn.Application.Abstractions;
 using SimuLearn.Application.Ai;
 using SimuLearn.Application.Common;
@@ -20,7 +21,9 @@ public sealed class SimulationService(
     SimulationModelRegistry registry,
     IRequestInterpreter interpreter,
     SceneSpecificationValidator sceneValidator,
-    ILearningEventRecorder events)
+    ILearningEventRecorder events,
+    IAiImageClient imageClient,
+    ILogger<SimulationService> logger)
 {
     public const int MaxPromptLength = 2000;
 
@@ -67,7 +70,8 @@ public sealed class SimulationService(
     public RenderSceneResponse RenderScene(
         string modelKey,
         IReadOnlyDictionary<string, double>? state,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        int? frame = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -84,8 +88,49 @@ public sealed class SimulationService(
         var normalized = model.Normalize(parsed);
         var outcome = model.Simulate(normalized);
         var result = SimulationMapper.ToResult(model, normalized, outcome);
-        var svg = SvgSceneRenderer.Render(model, normalized, outcome);
+        var svg = SvgSceneRenderer.Render(model, normalized, outcome, frame);
         return new RenderSceneResponse(model.ModelKey, model.Renderer, svg, result);
+    }
+
+    public async Task<RenderImageSceneResponse> RenderImageSceneAsync(
+        string modelKey,
+        IReadOnlyDictionary<string, double>? state,
+        CancellationToken cancellationToken)
+    {
+        var rendered = RenderScene(modelKey, state, cancellationToken);
+        var model = registry.GetRequired(modelKey);
+        var prompt = BuildImagePrompt(model, rendered.Result);
+
+        if (!imageClient.IsConfigured)
+        {
+            return new RenderImageSceneResponse(
+                model.ModelKey, model.Renderer, null, null, rendered.Svg, true, rendered.Result);
+        }
+
+        try
+        {
+            var image = await imageClient.GenerateAsync(new AiImageRequest(prompt), cancellationToken);
+            return new RenderImageSceneResponse(
+                model.ModelKey, "image", image.ImageUrl, image.ImageBase64, rendered.Svg, false, rendered.Result);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Image generation failed for {ModelKey}; returning SVG.", model.ModelKey);
+            return new RenderImageSceneResponse(
+                model.ModelKey, model.Renderer, null, null, rendered.Svg, true, rendered.Result);
+        }
+    }
+
+    private static string BuildImagePrompt(ISimulationModel model, SimulationResultDto result)
+    {
+        var facts = string.Join("; ", result.Observations.Select(o => $"{o.Label}: {o.Display}"));
+        return $"Educational illustration for a school lesson. Subject: {model.Subject}. "
+            + $"Scene: {model.Title}. {result.Summary} Key facts: {facts}. "
+            + "Clear textbook style, no text overlays, no people faces in detail, safe for children.";
     }
 
     public async Task<SimulationRequestDto> CreateRequestAsync(

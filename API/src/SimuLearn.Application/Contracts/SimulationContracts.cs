@@ -51,12 +51,26 @@ public sealed record PreviewSimulationRequest(
 
 public sealed record RenderSceneRequest(
     string ModelKey,
-    Dictionary<string, double>? State = null);
+    Dictionary<string, double>? State = null,
+    int? Frame = null);
 
 public sealed record RenderSceneResponse(
     string ModelKey,
     string Renderer,
     string Svg,
+    SimulationResultDto Result);
+
+public sealed record RenderImageSceneRequest(
+    string ModelKey,
+    Dictionary<string, double>? State = null);
+
+public sealed record RenderImageSceneResponse(
+    string ModelKey,
+    string Renderer,
+    string? ImageUrl,
+    string? ImageBase64,
+    string Svg,
+    bool UsedFallback,
     SimulationResultDto Result);
 
 public sealed record InterpretationDto(
